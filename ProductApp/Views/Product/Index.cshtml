@@ -48,8 +48,11 @@
             <div class="col-sm-4 bg-warning text-dark" style="border:1px solid blue;overflow-y:auto;height:500px;" id="cart" ondrop="DropEvent(event)" ondragover="AllowDrop(event)">
                 Cart
                 <span id="countItem">0</span>
-                <span id="total" style="bottom:0;">footer</span>
-                
+                @*<span id="total" style="bottom:0;">footer</span>*@
+                <table>
+                    <tbody id="root">
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>
@@ -60,7 +63,6 @@
 @section Scripts
     {
     <script>
-
         var count = 0;
         var totalprice = 0;
         var productId = 0;
@@ -69,8 +71,6 @@
         var price = "";
         var imageSrc = "";
         //let cartItem="";
-
-
         function DragStart(event) {
             console.log("Drag Started from product list");
             var dragId = event.target.id;
@@ -80,56 +80,51 @@
             productName = $('#' + dragId + ' #productName a').text();
             imageSrc = $('#' + dragId + ' img').attr("src");
         }
-        
+
         function DropEvent(event) {
 
-            //('#cart').append("<div><img height=50 width=50 src='" + imageSrc + "'<br/><p>" + productName + "</p><p>" + price + "</p></div > <hr/>")
-            //('#cart').append("<div><img height=50 width=50 src='" + imageSrc + "'<br/><p>" + productName + "</p><p>" + price + "</p></div > <hr/>");
+            $('#cart').append("<div><p>" + productName + "</p><p>" + price + "</p><img height=50 width=50 src='" + imageSrc + "'</div > ")
             count++;
 
             let cartItem = { image: imageSrc, productname: productName, Price: price, Quantity: count };
             var jsonobj = JSON.stringify(cartItem);
             console.log(jsonobj);
-
             var cartArray = new Array();
-            if (localStorage.getItem('cart')) {
+            if (localStorage.getItem('cartitem')) {
                 cartArray = JSON.parse(localStorage.getItem('cart'));
             }
-
             cartArray.push(jsonobj);
             var cartjson = JSON.stringify(cartArray);
-            localStorage.setItem('cart', cartjson);
+            localStorage.setItem('cartitem', cartjson);
             showprice();
         }
+        function showprice() {
+            var quantity = 0;
+            var Amount = 0;
+            var subtotal = 0;
 
-            function showprice() {
-                var quantity = 0;
-                var Amount = 0;
-                var subtotal = 0;
+            var cartRowHTML = "";
+            var itemCount = 0;
+            var grandTotal = 0;
+            // var Cartitem = "";
 
-                var cartRowHTML = "";
-                var itemCount = 0;
-                var grandTotal = 0;
+            if (localStorage.getItem('cartitem')) {
+                var shoppingCart = JSON.parse(localStorage.getItem('cartitem'));
+                itemCount = shoppingCart.length;
 
-
-            if (localStorage.getItem('cart')) {
-                var shoppingCart = JSON.parse(localStorage.getItem('cart'));
-                    itemCount = shoppingCart.length;
-
-                    shoppingCart.forEach(function (item) {
-                        var cartitem = JSON.parse(item);
-                        Amount = parseFloat(cartitem.Price);
-                        quantity = parseInt(cartitem.Quantity);
-                        subtotal = Amount * quantity;                      
-                        grandTotal += subtotal;
-                    });
-                }
-            console.log(grandTotal);
-                
-                $('#countItem').text(quantity);
-                $('#total').text("$" + grandTotal.toFixed(2));
+                shoppingCart.forEach(function (item) {
+                    Cartitem = JSON.parse(item);
+                    Amount = price;
+                    quantity = parseInt(cartitem.Quantity);
+                    subtotal = Amount * quantity;
+                    grandTotal += subtotal;
+                });
             }
-        
+            console.log(grandTotal);
+
+            $('#countItem').text(itemCount);
+            $('#total').text("$" + grandTotal.toFixed(2));
+        }
 
     </script>
     }
