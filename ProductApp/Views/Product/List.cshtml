@@ -1,0 +1,107 @@
+﻿@*@model IEnumerable<Products>*@
+@model ProductApp.ViewModel.ProductsViewModel
+
+@{
+    ViewData["Title"] = "List";
+}
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+
+<script src="~/lib/bootstrap/dist/js/bootstrap.min.js"></script>
+
+<div class="panel panel-primary panel-body">
+    <div class="row">
+        <div class="panel col-md-8">
+
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h4>List of Products</h4>
+                </div>
+                <div class="panel-body">
+                    <div class="row row-cols-1 row-cols-md-3 g-4" id="listProduts">
+                        @foreach (var product in Model.Products)
+                        {
+                            <div class="col">
+                                <div class="card">
+                                    <center>
+                                        <img src="@product.ImageUrl" height="150" width="100" class="img-responsive" alt="@product.ProductName">
+                                    </center>
+                                    <div class="card-body button">
+                                        <div class="d-flex justify-content-between mt-2">
+                                            <h2 class="text-start">
+                                                <a asp-controller="Product"
+                                               asp-action="Details"
+                                               asp-route-id="@product.ProductId"
+                                               class="link">@product.ProductName</a>
+                                            </h2>
+                                            <h5 class="text-nowrap">
+                                                @product.Price.ToString("c")
+                                            </h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4" style="border:black 2px">          
+            <div class="panel-heading" >
+                <h4>Cart Items</h4>
+            </div>
+            <div>
+               
+
+            </div>
+        </div>
+    </div>
+</div>
+
+    @section Scripts
+        {
+        <script type="text/javascript">
+            $(doument).ready(function () {
+                $("#listProduts").css({ 'z-index:100'}).draggable({
+                    'opacity': '0.5',
+                    'revert': true,
+                    'cursor': 'pointer'
+                })
+
+                function displayCart(data) {
+                    var s = '';
+                    var sum = 0;
+                    for (var i = 0; i < data.length; i++) {
+                        sum += parseInt(data[i].Amount) * parseFloat(data[i].Product.Price - data[i].Product.Discount) / 100;
+                        s += '<br><img src="Content/Images">' + data[i].Product.Photo + '"width="50" height="50">';
+                        s += '<br>Id:' + data[i].Product.ProductId;
+                        s += '<br>Name:' + data[i].Product.ProductName;
+                        s += '<br>Quantity:' + data[i].Amount;
+                        s += '<br>Price:' + data[i].Product.Price;
+                        s += '<br>Discount:' + data[i].Product.Discount;
+                        s += '<br>Totalprice:' + (parseInt(data[i].Amount) * parseFloat(data[i].Product.Price - data[i].Product.Discount)) / 100;
+                        s += '<br><a href="#?ShoppingCartId=' + data[i].Product.ProductId + '"class="delete">Delete</a>';
+                        s += '<br>---------------------------';
+                    }
+                    s += '<br>Totals:' + sum;
+                    $("#cart").html(s);
+                }
+
+                $('#cart').droppable({
+                    drop: function (event, ui) {
+                        var productId = $(ui.draggable).siblings('.productId').val();
+                        $.ajax({
+                            type: 'GET',
+                            url: 'Cart/' + productId,
+                            success: function (data) {
+                                displayCart(data);
+                            }
+                        })
+                    }
+                })
+            })
+        </script>
+    }
+

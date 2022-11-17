@@ -1,0 +1,138 @@
+﻿@model IEnumerable<Products>
+
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-sm-8 bg-secondary dragSource" id="shopping-cart" style="float:left;border:1px solid red;overflow-y: auto;height:500px;">
+                Product List
+                <div class="block">
+                    <div class="row row-cols-1 row-cols-md-3 g-4">
+                        @foreach (var product in Model)
+                        {
+                            <div class="col" ondragover="AllowDrop(event)">
+                                <div class="card productName" id="productId_@product.ProductId" style="width: 15rem;height:15rem;" ondragstart="DragStart(event)" draggable="true">
+                                    <center>
+                                        <img src="@product.ImageUrl" id="productImg" style="width:50%;" alt="@product.ProductName" draggable="false">
+                                    </center>
+                                    <div class="card-body button" id="productName">
+                                        <div class="d-flex justify-content-between mt-2">
+                                            <h2 class="text-start fs-6 text-justify" style="width: 3rem;">
+                                                <a asp-controller="Product"
+                                               asp-action="Details"
+                                               asp-route-id="@product.ProductId"
+                                               class="link">@product.ProductName</a>
+                                            </h2>
+                                            <h5 class="text-nowrap fs-6" style="width: 6rem;" id="price">
+                                                @product.Price.ToString("c")
+                                            </h5>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-sm-4 bg-warning text-dark" style="border:1px solid blue;overflow-y:auto;height:500px;" id="cart" ondrop="DropEvent(event)" ondragover="AllowDrop(event)">
+                Cart
+                <span id="countItem">0</span>
+                <span id="total" style="bottom:0;">footer</span>
+                
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+
+@section Scripts
+    {
+    <script>
+
+        var count = 0;
+        var totalprice = 0;
+        var productId = 0;
+        var name = "";
+        var productName = "";
+        var price = "";
+        var imageSrc = "";
+        //let cartItem="";
+
+
+        function DragStart(event) {
+            console.log("Drag Started from product list");
+            var dragId = event.target.id;
+            productId = +dragId.replace("productId_", "");
+            price = $('#' + dragId + ' #productName h5').text();
+            name = $('#' + dragId + ' #productName a').text();
+            productName = $('#' + dragId + ' #productName a').text();
+            imageSrc = $('#' + dragId + ' img').attr("src");
+        }
+        
+        function DropEvent(event) {
+
+            //('#cart').append("<div><img height=50 width=50 src='" + imageSrc + "'<br/><p>" + productName + "</p><p>" + price + "</p></div > <hr/>")
+            //('#cart').append("<div><img height=50 width=50 src='" + imageSrc + "'<br/><p>" + productName + "</p><p>" + price + "</p></div > <hr/>");
+            count++;
+
+            let cartItem = { image: imageSrc, productname: productName, Price: price, Quantity: count };
+            var jsonobj = JSON.stringify(cartItem);
+            console.log(jsonobj);
+
+            var cartArray = new Array();
+            if (localStorage.getItem('cart')) {
+                cartArray = JSON.parse(localStorage.getItem('cart'));
+            }
+
+            cartArray.push(jsonobj);
+            var cartjson = JSON.stringify(cartArray);
+            localStorage.setItem('cart', cartjson);
+            showprice();
+        }
+
+            function showprice() {
+                var quantity = 0;
+                var Amount = 0;
+                var subtotal = 0;
+
+                var cartRowHTML = "";
+                var itemCount = 0;
+                var grandTotal = 0;
+
+
+            if (localStorage.getItem('cart')) {
+                var shoppingCart = JSON.parse(localStorage.getItem('cart'));
+                    itemCount = shoppingCart.length;
+
+                    shoppingCart.forEach(function (item) {
+                        var cartitem = JSON.parse(item);
+                        Amount = parseFloat(cartitem.Price);
+                        quantity = parseInt(cartitem.Quantity);
+                        subtotal = Amount * quantity;                      
+                        grandTotal += subtotal;
+                    });
+                }
+            console.log(grandTotal);
+                
+                $('#countItem').text(quantity);
+                $('#total').text("$" + grandTotal.toFixed(2));
+            }
+        
+
+    </script>
+    }
+
+
+
