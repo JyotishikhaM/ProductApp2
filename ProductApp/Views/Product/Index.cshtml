@@ -61,14 +61,9 @@
 @section Scripts
     {
     <script>
-        //$(document).ready(function(){
-        //   var cart= JSON.parse(localStorage.getItem('cartitem'));
-        //    cart.forEach(function(item){
-        //       var crtitem=JSON.parse(item);
-        //        $('#cart').html(crtitem)
-        //    })
-        //})
-
+        $(document).ready(function(){
+            updateCart()
+        })
         var count = 0;
         var totalprice = 0;
         var productId = 0;
@@ -90,10 +85,9 @@
 
         function DropEvent(event) {
 
-            $('#cart').append("<div id=child><p>" + productName + "</p><p>" + price + "</p><p>" + discount + "</p><img height=50 width=50 src='" + imageSrc + "'</div ><br><button class=remove - item onClick=removeProduct()>Remove</button> ")
-            //count++;
+            $('#cart').append("<div id='cartitem_" + productId + "'><p>" + productName + "</p><p>" + price + "</p><p>" + discount + "</p><img height=50 width=50 src='" + imageSrc + "'</div ><br><button onClick=removeProduct(" + productId + ")>Remove</button>")
 
-            let cartItem = { productId: productId, image: imageSrc, productName: productName, price: price, discount: discount };
+            let cartItem = { productId: productId, imageSrc: imageSrc, productName: productName, price: price, discount: discount };
             var jsonobj = JSON.stringify(cartItem);
             console.log(jsonobj);
 
@@ -103,11 +97,8 @@
             }
             cartArray.push(jsonobj);
             var cartjson = JSON.stringify(cartArray);
-            localStorage.setItem('cartitem', cartjson);
-            //console.log(JSON.stringify(cartArray));
-            //console.log(localStorage.getItem('cartitem'))
-
-            // showprice();
+            localStorage.setItem('cartitem', cartjson);            
+           
             var quantity = 0;
             var Amount = 0;
             var Discount=0;
@@ -117,6 +108,7 @@
             var itemCount = 0;
             var grandTotal = 0;
             var Cartitem = "";
+            var totaldiscount=0;
             debugger;
 
             if (localStorage.getItem('cartitem')) {
@@ -128,13 +120,12 @@
                     //Cartitem =item;
                     Amount = parseFloat(Cartitem.price);
                     Discount = parseFloat(Cartitem.discount);
-                    total = parseFloat(Amount - Discount);
-                    subtotal += total;
-                    //grandTotal += subtotal;
+                    totaldiscount = Amount - Discount;
+                    //total = parseFloat(Amount - Discount);
+                    subtotal += totaldiscount;                   
                 });
             }
             console.log(subtotal);
-
             $('#countItem').text(itemCount);
             $('#total').text("$" + subtotal);
         }
@@ -148,14 +139,63 @@
             }
         }
 
-        function removeProduct() {
+        function removeProduct(id) {
+            var totalprice=0;
+            var totaldiscount=0;
 
-            let cart = JSON.parse(localStorage.getItem('cartitem'))
-
-            const index = cart.findIndex(user => user.productId == productId);
-            cart.splice(index);
+            let cart = JSON.parse(localStorage.getItem('cartitem'));
+            //let temp = cart.filter(item => item.productId != id);
+            //localStorage.setItem('cartitem', JSON.stringify(temp));
+            var count = 0;
+            var index = -1; 
+            cart.map((item) => {
+                var list = JSON.parse(item);
+                if (list.productId == id) {
+                    index = count;
+                }
+                count++;
+            })
+            cart.splice(index,1);
             localStorage.setItem('cartitem', JSON.stringify(cart));
+            $('#cartitem_' + id).remove();
+
+            //let shoppingcrt = JSON.parse(localStorage.getItem('cartitem'));
+            cart.forEach(function (item) {
+                Cartitem = JSON.parse(item);
+                Amount = parseFloat(Cartitem.price);
+                Discount = parseFloat(Cartitem.discount);
+                totaldiscount = Amount - Discount;
+                totalprice += totaldiscount;                
+            })
+            $('#countItem').html(`${cart.length}`);
+            $('#total').text("$" + totalprice);
            
+        }
+
+        function updateCart() {
+            debugger;
+            var totaprice=0;
+            var totaldiscount = 0;
+
+            let cart = JSON.parse(localStorage.getItem('cartitem'));
+            
+            cart.map((item) =>{
+                var list = JSON.parse(item);
+                $("#cart").append("<div id='cartitem_"+list.productId+"'><p>"+ list.productName + "</p><p>" +list.price+ "</p><p>" +list.discount+ "</p><img height=50 width=50 src='" +list.imageSrc+ "'</div ><br><button onClick=removeProduct(" +list.productId+ ")>Remove</button>")
+            })
+
+            let shoppingcrt = JSON.parse(localStorage.getItem('cartitem'));
+
+            shoppingcrt.forEach(function (item) {
+                Cartitem = JSON.parse(item);
+                Amount = parseFloat(Cartitem.price);
+                Discount = parseFloat(Cartitem.discount);
+                totaldiscount = Amount - Discount;
+                totalprice += totaldiscount;               
+            })
+
+            $('#countItem').html(`${cart.length}`);
+            $('#total').text("$" + totalprice);
         }
     </script>
     }
