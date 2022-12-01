@@ -21,10 +21,10 @@
                             <div class="col" ondragover="AllowDrop(event)">
                                 <div class="card productName" id="productId_@product.ProductId" style="width: 14rem;height:15rem;" ondragstart="DragStart(event)" draggable="true">
                                     <center>
-                                        <img src="@product.ImageUrl" id="productImg" style="width:50%;" alt="@product.ProductName" draggable="false">
+                                        <img src="@product.ImageUrl" class="card-img-top img-fluid" id="productImg" style="width:50%;height:100px;" alt="@product.ProductName" draggable="false">
                                     </center>
-                                    <div class="card-body button" id="productName">
-                                        <div class="justify-content-between mt-2">
+                                    <div class="card-body" id="productName">
+                                        <div class="card-text d-grid">
                                             <h2 class="text-start fs-6 text-nowrap" style="width: 3rem;">
                                                 Item :
                                                 <a asp-controller="Product" asp-action="Details"
@@ -43,14 +43,16 @@
             </div>
 
             <div class="col-sm-4 text-dark" style="border:1px solid blue;overflow-y:auto;height:500px;" ondrop="DropEvent(event)" ondragover="AllowDrop(event)">
-                Cart :
-                <span id="countItem">0</span>&nbsp;&nbsp;&nbsp;                
-                Total Amount : <span id="total" style="position:absolute;">0</span>
-                <button type="button" class="btn btn-outline-secondary float-right" onclick="ClrarCart()" style='float:right;'>Buy</button>
-              
-                <div id="cart">
+                <div>
+                    Cart :
+                    <span id="countItem" style="color:blue">0</span>&nbsp;&nbsp;&nbsp;
+                    Total Amount : <span id="total" style="color:blue">0</span>
+                    <button type="button" class="btn btn-outline-secondary float-right" onclick="ClearCart()" style='float:right;font-size: 12px'>Buy</button>
 
-               </div>
+                </div>
+                <br />
+                <div id="cart">
+                </div>
             </div>
         </div>
     </div>
@@ -61,9 +63,10 @@
 @section Scripts
     {
     <script>
-        $(document).ready(function(){
-            updateCart()
+        $(document).ready(function () {
+            updateCart();
         })
+
         var count = 0;
         var totalprice = 0;
         var productId = 0;
@@ -81,56 +84,47 @@
             productName = $('#' + dragId + ' #productName a').text();
             discount = $('#' + dragId + ' #productName h6').text();
             imageSrc = $('#' + dragId + ' img').attr("src");
+            produtQuantity = 1;
         }
 
         function DropEvent(event) {
-
-            $('#cart').append("<div id='cartitem_" + productId + "'><p>" + productName + "</p><p>" + price + "</p><p>" + discount + "</p><img height=50 width=50 src='" + imageSrc + "'</div ><br><button onClick=removeProduct(" + productId + ")>Remove</button>")
-
-            let cartItem = { productId: productId, imageSrc: imageSrc, productName: productName, price: price, discount: discount };
-            var jsonobj = JSON.stringify(cartItem);
-            console.log(jsonobj);
-
-            var cartArray = new Array();
-            if (localStorage.getItem('cartitem')) {
-                cartArray = JSON.parse(localStorage.getItem('cartitem'));
-            }
-            cartArray.push(jsonobj);
-            var cartjson = JSON.stringify(cartArray);
-            localStorage.setItem('cartitem', cartjson);            
            
-            var quantity = 0;
-            var Amount = 0;
-            var Discount=0;
-            var total=0;
-            var subtotal = 0;
-            var cartRowHTML = "";
-            var itemCount = 0;
-            var grandTotal = 0;
-            var Cartitem = "";
-            var totaldiscount=0;
-            debugger;
+            var cart = JSON.parse(localStorage.getItem('cartitem'));
+           
+            if (cart == null) {
 
-            if (localStorage.getItem('cartitem')) {
-                var shoppingCart = JSON.parse(localStorage.getItem('cartitem'));
-                itemCount = shoppingCart.length;
-
-                shoppingCart.forEach(function (item) {
-                    Cartitem = JSON.parse(item);
-                    //Cartitem =item;
-                    Amount = parseFloat(Cartitem.price);
-                    Discount = parseFloat(Cartitem.discount);
-                    totaldiscount = Amount - Discount;
-                    //total = parseFloat(Amount - Discount);
-                    subtotal += totaldiscount;                   
-                });
+                let products = [];
+                let product = { productId: productId, imageSrc: imageSrc, productName: productName, price: price, discount: discount, produtQuantity: 1 };
+                if (localStorage.getItem('cartitem')) {
+                    cartArray = JSON.parse(localStorage.getItem('cartitem'));
+                }
+                products.push(product);
+                localStorage.setItem("cartitem", JSON.stringify(products))
+              
             }
-            console.log(subtotal);
-            $('#countItem').text(itemCount);
-            $('#total').text("$" + subtotal);
+            else {
+                let pcart = JSON.parse(localStorage.getItem('cartitem'));
+                let oldprouct = pcart.find(item => item.productId == productId);
+                if (oldprouct) {
+                    oldprouct.produtQuantity = oldprouct.produtQuantity + 1;
+                    pcart.map((item) => {
+                        if (item.productId == oldprouct.productId) {
+                            item.produtQuantity = oldprouct.produtQuantity;
+                        }
+                    })
+                    localStorage.setItem('cartitem', JSON.stringify(pcart));
+
+                }
+                else {
+                    let product = { productId: productId, imageSrc: imageSrc, productName: productName, price: price, discount: discount, produtQuantity: 1 };
+                    pcart.push(product);
+                    localStorage.setItem('cartitem', JSON.stringify(pcart));                    
+                }
+            }
+            updateCart();
         }
 
-        function ClrarCart() {
+        function ClearCart() {
             if (localStorage.getItem('cartitem')) {
                 localStorage.removeItem('cartitem');
                 $('#cart').empty();
@@ -140,61 +134,74 @@
         }
 
         function removeProduct(id) {
-            var totalprice=0;
-            var totaldiscount=0;
-
+            var totalprice = 0;
+            var totaldiscount = 0;
+            var quantity = 0;
+            var totalquantity = 0;
+            var total = 0;
             let cart = JSON.parse(localStorage.getItem('cartitem'));
-            //let temp = cart.filter(item => item.productId != id);
-            //localStorage.setItem('cartitem', JSON.stringify(temp));
-            var count = 0;
-            var index = -1; 
-            cart.map((item) => {
-                var list = JSON.parse(item);
-                if (list.productId == id) {
-                    index = count;
-                }
-                count++;
-            })
-            cart.splice(index,1);
-            localStorage.setItem('cartitem', JSON.stringify(cart));
+            let temp = cart.filter(item => item.productId != id);
+            localStorage.setItem('cartitem', JSON.stringify(temp));
+            
+            //var count = 0;
+            //var index = -1;
+            //cart.map((item) => {                
+            //    if (item.productId == id) {
+            //        index = count;
+            //    }
+            //    count++;
+            //})
+            //cart.splice(index, 1);
+            //localStorage.setItem('cartitem', JSON.stringify(cart));
             $('#cartitem_' + id).remove();
 
-            //let shoppingcrt = JSON.parse(localStorage.getItem('cartitem'));
-            cart.forEach(function (item) {
-                Cartitem = JSON.parse(item);
-                Amount = parseFloat(Cartitem.price);
-                Discount = parseFloat(Cartitem.discount);
-                totaldiscount = Amount - Discount;
-                totalprice += totaldiscount;                
-            })
-            $('#countItem').html(`${cart.length}`);
-            $('#total').text("$" + totalprice);
+            updateCart();
+
            
         }
 
         function updateCart() {
-            debugger;
-            var totaprice=0;
+            var totalprice = 0;
             var totaldiscount = 0;
+            var quantity=0;
+            var totalquantity=0;
+            var total=0;
+            let cart = JSON.parse(localStorage.getItem('cartitem'));         
 
-            let cart = JSON.parse(localStorage.getItem('cartitem'));
-            
-            cart.map((item) =>{
-                var list = JSON.parse(item);
-                $("#cart").append("<div id='cartitem_"+list.productId+"'><p>"+ list.productName + "</p><p>" +list.price+ "</p><p>" +list.discount+ "</p><img height=50 width=50 src='" +list.imageSrc+ "'</div ><br><button onClick=removeProduct(" +list.productId+ ")>Remove</button>")
-            })
-
-            let shoppingcrt = JSON.parse(localStorage.getItem('cartitem'));
-
-            shoppingcrt.forEach(function (item) {
-                Cartitem = JSON.parse(item);
-                Amount = parseFloat(Cartitem.price);
-                Discount = parseFloat(Cartitem.discount);
+            cart.forEach(function (item) {                
+                Amount = parseFloat(item.price);
+                Discount = parseFloat(item.discount);
+                quantity = item.produtQuantity;
                 totaldiscount = Amount - Discount;
-                totalprice += totaldiscount;               
+                total = totaldiscount * quantity;
+                totalprice += total;
+                totalquantity+=quantity;
             })
 
-            $('#countItem').html(`${cart.length}`);
+            let table=`<div>`
+            ;
+
+            cart.map((item)=>{
+                table += `<div id="cartitem_${item.productId}" class='row'>
+                <div class='col-3' style='float:left;'>
+                <img height=100 width = 70 src ="${item.imageSrc}">
+                </div>
+                <div class='col-9' style='float:right;'> ${item.productName}<br>${item.price}<br>${item.discount}<br>${item.produtQuantity}<br>Total : ${item.produtQuantity * (item.price - item.discount)}</div >
+                <div><button onClick=removeProduct(${item.productId})>Remove</button></div>
+                </div>`
+            })
+           
+            table=table+`</div>`
+            $("#cart").html(table);
+
+            //cart.map((item) => {
+             //var list = JSON.parse(item);
+             //$('#cart').append("<div id='cartitem_" + list.productId + "' class='row'><div class=class='col-3' style='float:left;'><img height=100 width = 70 src = '" + list.imageSrc + "' < /div><div class='col-9' style='float:right;'>" + list.productName + "<br>" + list.price + "<br>" + list.discount + "<br>" + list.produtQuantity + "</div ><div><button onClick=removeProduct(" + list.productId + ")>Remove</button></div></div><br>")
+              //$('#cart').append("<div id='cartitem_" + ${item.productId} + "' class='row'><div class=class='col-3' style='float:left;'><img height=100 width = 70 src = '" + ${item.imageSrc} + "' < /div><div class='col-9' style='float:right;'>" + ${item.productName} + "<br>" + ${item.price} + "<br>" + ${item.discount} + "<br>" + ${item.produtQuantity} + "</div ><div><button onClick=removeProduct(" + ${item.productId} + ")>Remove</button></div></div><br>")
+            //  $('#cart').html("<div id='cartitem_" + item.productId  + "' class='row'><div class=class='col-3' style='float:left;'><img height=100 width = 70 src = '" +  item.imageSrc  + "' < /div><div class='col-9' style='float:right;'>" +  item.productName  + "<br>" +  item.price  + "<br>" + item.discount  + "<br>" +  item.produtQuantity  + "</div ><div><button onClick=removeProduct(" +  item.productId  + ")>Remove</button></div></div><br>")
+            //})
+          
+            $('#countItem').html(totalquantity);
             $('#total').text("$" + totalprice);
         }
     </script>
